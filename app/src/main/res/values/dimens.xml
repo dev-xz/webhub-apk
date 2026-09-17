@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Hub top bar -->
+    <dimen name="hub_topbar_height">64dp</dimen>
+    <dimen name="hub_topbar_title_size">20sp</dimen>
+    <dimen name="hub_topbar_padding_h">16dp</dimen>
+
+    <!-- Hub grid -->
+    <dimen name="hub_grid_spacing">12dp</dimen>
+    <dimen name="hub_grid_edge_padding">12dp</dimen>
+    <dimen name="hub_item_icon_size">84dp</dimen>
+    <dimen name="hub_item_name_size">13sp</dimen>
+    <dimen name="hub_item_name_max_lines">2</dimen>
+    <dimen name="hub_item_padding">12dp</dimen>
+
+    <!-- Empty state -->
+    <dimen name="hub_empty_text_size">16sp</dimen>
+    <dimen name="onboarding_max_width">560dp</dimen>
+
+    <!-- Banner -->
+    <dimen name="hub_banner_padding">12dp</dimen>
+    <dimen name="hub_banner_text_size">13sp</dimen>
+
+    <!-- FAB -->
+    <dimen name="hub_fab_margin">20dp</dimen>
+
+    <!-- Onboarding -->
+    <dimen name="onboarding_title_size">20sp</dimen>
+    <dimen name="onboarding_desc_size">14sp</dimen>
+    <dimen name="onboarding_status_size">13sp</dimen>
+    <dimen name="onboarding_padding">24dp</dimen>
+    <dimen name="onboarding_row_gap">16dp</dimen>
+
+    <!-- Dialog form -->
+    <dimen name="dialog_form_padding">24dp</dimen>
+    <dimen name="dialog_form_field_gap">12dp</dimen>
+    <dimen name="dialog_radio_label_size">14sp</dimen>
+
+    <!-- Icon picker (preset grid inside dialog) -->
+    <dimen name="preset_picker_icon_size">52dp</dimen>
+    <dimen name="preset_picker_spacing">5dp</dimen>
+
+    <!-- Uploaded image preview thumbnail -->
+    <dimen name="upload_preview_size">72dp</dimen>
+
+</resources>

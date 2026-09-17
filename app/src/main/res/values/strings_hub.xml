@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Hub screen -->
+    <string name="hub_title">WebHub</string>
+    <string name="hub_add">添加子应用</string>
+    <string name="hub_more">更多选项</string>
+    <string name="menu_export_config">导出配置</string>
+    <string name="menu_import_config">导入配置</string>
+    <string name="import_mode_title">导入配置</string>
+    <string name="import_mode_append">追加（保留现有子应用，跳过网址重复的条目）</string>
+    <string name="import_mode_overwrite">覆盖（删除全部现有子应用后导入）</string>
+    <string name="import_overwrite_title">覆盖导入</string>
+    <string name="import_overwrite_message">覆盖将删除全部现有子应用及其网页数据（含登录态），且不可恢复。确定继续？</string>
+    <string name="toast_export_done">已导出 %1$d 个子应用配置</string>
+    <string name="toast_export_failed">导出失败</string>
+    <string name="toast_import_result">导入完成：新增 %1$d 个，跳过 %2$d 个</string>
+    <string name="toast_import_failed">导入失败：文件无效或格式不支持</string>
+    <string name="hub_empty">还没有子应用</string>
+    <string name="hub_empty_hint">点击右下角“+”添加第一个子应用</string>
+    <string name="hub_multi_profile_unsupported">当前设备 WebView 不支持数据隔离，各子应用将共享浏览数据</string>
+
+    <!-- Add/Edit dialog -->
+    <string name="dialog_add_title">新增子应用</string>
+    <string name="dialog_edit_title">编辑子应用</string>
+    <string name="field_name">名称</string>
+    <string name="field_name_hint">子应用名称</string>
+    <string name="field_url">网址</string>
+    <string name="field_url_hint">https://example.com</string>
+    <string name="field_url_invalid">地址无效，需带完整协议头（http/https）与有效主机名</string>
+    <string name="field_name_required">请输入名称</string>
+    <string name="field_icon_source">图标来源</string>
+    <string name="icon_source_favicon">自动抓取网站图标</string>
+    <string name="icon_source_upload">上传图片</string>
+    <string name="icon_source_preset">选择预设图标</string>
+    <string name="icon_pick_image">选择图片</string>
+    <string name="icon_preset_label">预设图标</string>
+    <string name="field_ua_mode">访问模式</string>
+    <string name="ua_default">系统默认</string>
+    <string name="ua_mobile">移动端</string>
+    <string name="ua_tablet">平板</string>
+    <string name="ua_desktop">电脑端</string>
+    <string name="field_zoom">固定缩放比例 (%)</string>
+    <string name="field_zoom_hint">留空表示不固定，范围 10–400</string>
+    <string name="field_zoom_invalid">缩放比例需在 10–400 之间</string>
+    <string name="field_ignore_ssl">不校验证书（自签名站点）</string>
+    <string name="action_save">保存</string>
+    <string name="action_cancel">取消</string>
+
+    <!-- Item options dialog -->
+    <string name="options_title">操作</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_pin">固定到桌面</string>
+    <string name="action_clear_data">清空数据</string>
+    <string name="action_delete">删除</string>
+
+    <!-- Confirm dialogs -->
+    <string name="confirm_delete_title">删除子应用</string>
+    <string name="confirm_delete_message">确定删除“%1$s”？将同时清除其全部浏览数据，并禁用桌面快捷方式（如未自动移除，请长按图标手动删除）。</string>
+    <string name="confirm_clear_title">清空数据</string>
+    <string name="confirm_clear_message">将清空“%1$s”的全部浏览数据（cookie、登录态、缓存），子应用仍保留。确定继续吗？</string>
+
+    <!-- Toasts -->
+    <string name="toast_clear_done">已清空浏览数据</string>
+    <string name="toast_clear_failed">清空数据失败</string>
+    <string name="toast_pin_unsupported">当前启动器不支持固定快捷方式，已跳过</string>
+    <string name="toast_pin_requested">已请求添加到桌面</string>
+    <string name="pin_permission_title">需要桌面快捷方式权限</string>
+    <string name="pin_permission_message">需要在系统设置中允许创建桌面快捷方式，才能固定“%1$s”。</string>
+    <string name="pin_permission_open">去开启</string>
+    <string name="toast_save_failed">保存失败</string>
+    <string name="toast_created">已创建子应用</string>
+    <string name="toast_icon_fetch_failed">未抓取到图标，已分配内置图标</string>
+    <string name="toast_deleted">已删除</string>
+
+    <!-- Onboarding overlay -->
+    <string name="onboarding_title">首次使用引导</string>
+    <string name="onboarding_desc">为保证网页通知能及时送达，请完成以下两项授权：</string>
+    <string name="onboarding_notif_button">通知权限</string>
+    <string name="onboarding_notif_granted">✓ 已开启</string>
+    <string name="onboarding_notif_pending">未开启 — 点击按钮授权</string>
+    <string name="onboarding_battery_button">电池优化白名单</string>
+    <string name="onboarding_battery_granted">✓ 已加入白名单</string>
+    <string name="onboarding_battery_pending">未加入白名单 — 点击按钮授权</string>
+    <string name="onboarding_start">开始使用</string>
+
+</resources>

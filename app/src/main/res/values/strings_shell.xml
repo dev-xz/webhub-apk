@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Deleted-child fallback (task 5.1): launched from a stale launcher shortcut. -->
+    <string name="shell_deleted_title">应用已不存在</string>
+    <string name="shell_deleted_message">该应用已被删除，请长按桌面图标移除快捷方式。</string>
+    <string name="shell_deleted_ok">确定</string>
+</resources>

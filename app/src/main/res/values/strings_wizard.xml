@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wizard_add_title">新增子应用</string>
+    <string name="wizard_edit_title">编辑子应用</string>
+    <string name="wizard_url">网址</string>
+    <string name="wizard_url_helper">请输入带 http 或 https 的完整网址</string>
+    <string name="wizard_ignore_ssl">不校验证书</string>
+    <string name="wizard_ignore_ssl_helper">自签名证书或证书过期的站点需要勾选</string>
+    <string name="wizard_name">名称</string>
+    <string name="wizard_icon_source">图标来源</string>
+    <string name="wizard_icon_fetched">抓取到的图标</string>
+    <string name="wizard_icon_upload">上传图片</string>
+    <string name="wizard_icon_preset">预设图标</string>
+    <string name="wizard_pick_image">选择图片</string>
+    <string name="wizard_browse_settings">浏览设置</string>
+    <string name="wizard_ua_default">系统默认</string>
+    <string name="wizard_ua_mobile">移动端</string>
+    <string name="wizard_ua_tablet">平板</string>
+    <string name="wizard_ua_desktop">电脑端</string>
+    <string name="wizard_zoom">页面缩放</string>
+    <string name="wizard_fetching">正在抓取网页信息…</string>
+    <string name="wizard_cancel_fetch">取消抓取</string>
+    <string name="wizard_retry">重试</string>
+    <string name="wizard_refetch">重新抓取图标</string>
+    <string name="wizard_previous">上一步</string>
+    <string name="wizard_next">下一步</string>
+    <string name="wizard_save">保存</string>
+    <string name="wizard_cancel">取消</string>
+    <string name="wizard_url_invalid">地址无效，需带完整协议头（http/https）与有效主机名</string>
+    <string name="wizard_name_required">请输入名称</string>
+    <string name="crop_title">裁剪图标</string>
+    <string name="crop_hint">拖动调整位置，双指缩放</string>
+    <string name="crop_confirm">使用裁剪结果</string>
+    <string name="crop_failed">裁剪图片保存失败</string>
+    <string name="wizard_error_bad_url">地址无法解析</string>
+    <string name="wizard_error_network">网络请求失败，请检查网络或证书设置</string>
+    <string name="wizard_error_decode">抓到了文件但无法识别为图片</string>
+    <string name="wizard_error_unknown">网页信息抓取失败</string>
+</resources>

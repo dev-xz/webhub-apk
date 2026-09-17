@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hub_ink">#17212B</color>
+    <color name="hub_muted">#61707D</color>
+    <color name="hub_teal">#087E8B</color>
+    <color name="hub_teal_dark">#055D68</color>
+    <color name="hub_coral">#E76F51</color>
+    <color name="hub_surface">#F7F9F8</color>
+    <color name="hub_card">#FFFFFF</color>
+    <color name="hub_line">#D9E2E1</color>
+    <color name="hub_warning_surface">#FFF3E0</color>
+    <color name="hub_warning_ink">#8A4B08</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

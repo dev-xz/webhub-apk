@@ -1,0 +1,32 @@
+# Gradle / 构建产物
+.gradle/
+.kotlin/
+**/build/
+build/
+
+# 本地环境
+local.properties
+
+# IDE
+*.iml
+.idea/
+.vscode/
+
+# 签名材料（绝不入库）
+keystore/
+*.jks
+*.keystore
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 其他
+.cxx/
+.externalNativeBuild/
+captures/
+
+# AI 辅助 / 规格工作目录（不入库）
+.opencode/
+openspec/
+AGENTS.md

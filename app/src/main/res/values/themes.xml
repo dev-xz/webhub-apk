@@ -1,0 +1,13 @@
+<resources>
+    <style name="Theme.WebHub" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/hub_teal</item>
+        <item name="colorPrimary">@color/hub_teal</item>
+        <item name="colorPrimaryVariant">@color/hub_teal_dark</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">@color/hub_surface</item>
+        <item name="android:navigationBarColor">@color/hub_surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>
