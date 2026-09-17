@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night mode: status/nav bar backgrounds (hub_surface #101718) are dark → light icons.
+         Fixes dark-mode "black icons on dark background" legibility bug. -->
+    <bool name="is_light_status_bar">false</bool>
+    <bool name="is_light_navigation_bar">false</bool>
+</resources>

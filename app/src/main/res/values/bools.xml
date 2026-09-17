@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Day mode: status/nav bar backgrounds (hub_surface) are light → dark icons. -->
+    <bool name="is_light_status_bar">true</bool>
+    <bool name="is_light_navigation_bar">true</bool>
+</resources>
