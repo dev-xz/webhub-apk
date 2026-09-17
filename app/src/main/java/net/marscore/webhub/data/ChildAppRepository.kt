@@ -27,5 +27,8 @@ class ChildAppRepository(context: Context) {
 
     suspend fun getById(id: Long): ChildApp? = dao.getById(id)
 
+    /** One-shot snapshot of all child apps, ordered by [ChildApp.createdAt] ascending. */
+    suspend fun getAll(): List<ChildApp> = dao.getAll()
+
     fun observeAll(): Flow<List<ChildApp>> = dao.observeAll()
 }

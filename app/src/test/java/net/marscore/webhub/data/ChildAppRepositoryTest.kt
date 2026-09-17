@@ -73,6 +73,14 @@ class ChildAppRepositoryTest {
         assertEquals(listOf("A", "B"), all.map { it.name })
     }
 
+    @Test fun getAllReturnsAllChildren() = runTest {
+        repo.insert(ChildApp(name = "Older", url = "https://a.example.com", createdAt = 1000L))
+        repo.insert(ChildApp(name = "Newer", url = "https://b.example.com", createdAt = 2000L))
+        val all = repo.getAll()
+        assertEquals(2, all.size)
+        assertEquals(listOf("Older", "Newer"), all.map { it.name })
+    }
+
     private fun solidBitmap(size: Int, color: Int): Bitmap {
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         Canvas(bmp).drawColor(color)

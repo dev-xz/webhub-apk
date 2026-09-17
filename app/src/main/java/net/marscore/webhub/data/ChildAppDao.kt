@@ -25,4 +25,7 @@ interface ChildAppDao {
 
     @Query("SELECT * FROM child_app ORDER BY createdAt ASC")
     fun observeAll(): Flow<List<ChildApp>>
+
+    @Query("SELECT * FROM child_app ORDER BY createdAt ASC")
+    suspend fun getAll(): List<ChildApp>
 }

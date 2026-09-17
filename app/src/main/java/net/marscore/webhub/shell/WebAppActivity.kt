@@ -26,6 +26,7 @@ import net.marscore.webhub.R
 import net.marscore.webhub.data.ChildApp
 import net.marscore.webhub.data.ChildAppRepository
 import net.marscore.webhub.icons.PresetIcons
+import net.marscore.webhub.icons.UrlValidator
 import net.marscore.webhub.notifications.ChildNotificationChannels
 import net.marscore.webhub.notifications.NotificationBridge
 import net.marscore.webhub.notifications.NotificationBridgeJs
@@ -147,7 +148,12 @@ class WebAppActivity : AppCompatActivity() {
         webView.visibility = View.VISIBLE
 
         configureWebView(app)
-        webView.loadUrl(app.url)
+        // External jump (webhub://jump/auto?url=…): the target url is the first page to load,
+        // validated via UrlValidator. homeUrl stays app.url so back-to-home returns to the child's
+        // configured home, not the deep link. Absent/invalid target falls back to the child's URL.
+        val targetUrl = intent?.getStringExtra(EXTRA_TARGET_URL)
+            ?.takeIf { UrlValidator.isValid(it) }
+        webView.loadUrl(targetUrl ?: app.url)
     }
 
     @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
@@ -442,6 +448,9 @@ class WebAppActivity : AppCompatActivity() {
         /** Intent extra carrying the child app id. */
         const val EXTRA_CHILD_ID = "net.marscore.webhub.extra.CHILD_ID"
 
+        /** Optional intent extra: a deep-link URL to load instead of the child's configured home URL. Used by external jump routing. */
+        const val EXTRA_TARGET_URL = "net.marscore.webhub.extra.TARGET_URL"
+
         /**
          * Explicit intent to launch the shell for [childId]. Sets the extra, a unique
          * `webhub://app/<id>` data URI (so shortcut/notification taps route to the right recents
@@ -462,6 +471,18 @@ class WebAppActivity : AppCompatActivity() {
                 putExtra(EXTRA_CHILD_ID, childId)
                 data = Uri.parse("webhub://app/$childId")
                 flags = Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+            }
+
+        /**
+         * Launch intent for a child app with an explicit deep-link target URL. The shell loads [targetUrl]
+         * as the first page but keeps the child's configured URL as the home (back-to-home target).
+         * [targetUrl] may be null to behave identically to the single-arg overload.
+         */
+        fun createIntent(context: Context, childId: Long, targetUrl: String?): Intent =
+            createIntent(context, childId).apply {
+                if (!targetUrl.isNullOrBlank()) {
+                    putExtra(EXTRA_TARGET_URL, targetUrl)
+                }
             }
     }
 }

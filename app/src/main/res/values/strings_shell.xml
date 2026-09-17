@@ -4,4 +4,8 @@
     <string name="shell_deleted_title">应用已不存在</string>
     <string name="shell_deleted_message">该应用已被删除，请长按桌面图标移除快捷方式。</string>
     <string name="shell_deleted_ok">确定</string>
+
+    <!-- External jump scheme (webhub://jump/auto?url=): routing Toasts. -->
+    <string name="shell_jump_invalid">链接无效</string>
+    <string name="shell_jump_no_match">无匹配子应用</string>
 </resources>
