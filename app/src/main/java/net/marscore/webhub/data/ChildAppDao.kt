@@ -28,4 +28,10 @@ interface ChildAppDao {
 
     @Query("SELECT * FROM child_app ORDER BY createdAt ASC")
     suspend fun getAll(): List<ChildApp>
+
+    @Query("SELECT * FROM child_app ORDER BY lastOpenedAt DESC, createdAt ASC")
+    suspend fun getAllByRecency(): List<ChildApp>
+
+    @Query("UPDATE child_app SET lastOpenedAt = :ts WHERE id = :id")
+    suspend fun updateLastOpened(id: Long, ts: Long)
 }

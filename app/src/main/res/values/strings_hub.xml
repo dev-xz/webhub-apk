@@ -76,12 +76,12 @@
     <!-- Onboarding overlay -->
     <string name="onboarding_title">首次使用引导</string>
     <string name="onboarding_desc">为保证网页通知能及时送达，请完成以下两项授权：</string>
-    <string name="onboarding_notif_button">通知权限</string>
+    <string name="onboarding_notif_button">开启通知权限</string>
     <string name="onboarding_notif_granted">✓ 已开启</string>
-    <string name="onboarding_notif_pending">未开启 — 点击按钮授权</string>
-    <string name="onboarding_battery_button">电池优化白名单</string>
+    <string name="onboarding_notif_pending">未开启</string>
+    <string name="onboarding_battery_button">配置电池优化</string>
     <string name="onboarding_battery_granted">✓ 已加入白名单</string>
-    <string name="onboarding_battery_pending">未加入白名单 — 点击按钮授权</string>
+    <string name="onboarding_battery_pending">未加入白名单</string>
     <string name="onboarding_start">开始使用</string>
 
 </resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Home-screen widgets (task 3.1). -->
+    <string name="widget_child_deleted">子应用已删除</string>
+    <string name="widget_config_title_single">选择要展示的子应用</string>
+    <string name="widget_config_empty">还没有子应用，请先在 WebHub 中添加</string>
+    <string name="widget_configure_placeholder">点击配置</string>
+    <string name="widget_description_1x1">展示一个子应用图标</string>
+    <string name="widget_description_2x1">2 个最近子应用</string>
+    <string name="widget_description_2x2">4 个最近子应用</string>
+    <string name="widget_description_4x2">8 个最近子应用</string>
+
+</resources>

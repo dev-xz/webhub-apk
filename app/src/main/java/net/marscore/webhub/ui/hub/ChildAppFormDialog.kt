@@ -51,6 +51,7 @@ class ChildAppFormDialog private constructor(
         val presetKey: String?,
         val faviconBitmap: Bitmap?,
         val uaMode: String,
+        val displayMode: String,
         val zoomPercent: Int,
         val ignoreSsl: Boolean
     )
@@ -75,6 +76,7 @@ class ChildAppFormDialog private constructor(
     private lateinit var fetchError: TextView
     private lateinit var retryButton: TextView
     private lateinit var iconSourceGroup: RadioGroup
+    private lateinit var retryFetchContainer: View
     private lateinit var uploadPanel: View
     private lateinit var uploadPreview: ImageView
     private lateinit var presetGrid: RecyclerView
@@ -128,6 +130,7 @@ class ChildAppFormDialog private constructor(
         fetchError = view.findViewById(R.id.fetch_error)
         retryButton = view.findViewById(R.id.btn_retry_fetch)
         iconSourceGroup = view.findViewById(R.id.icon_source_group)
+        retryFetchContainer = view.findViewById(R.id.retry_fetch_container)
         uploadPanel = view.findViewById(R.id.upload_panel)
         uploadPreview = view.findViewById(R.id.upload_preview)
         presetGrid = view.findViewById(R.id.preset_grid)
@@ -146,6 +149,14 @@ class ChildAppFormDialog private constructor(
         iconSourceGroup.setOnCheckedChangeListener { _, checkedId ->
             uploadPanel.visibility = if (checkedId == R.id.icon_source_upload) View.VISIBLE else View.GONE
             presetGrid.visibility = if (checkedId == R.id.icon_source_preset) View.VISIBLE else View.GONE
+            // Retry-fetch is an option of the "favicon" icon source; the container is
+            // gated on favicon being selected. In edit mode we additionally keep it
+            // reachable regardless of the current icon source so the user can always
+            // re-fetch (matches the "刷新图标操作不见了" expectation). The container
+            // visibility is mirrored in showStep2() for the programmatic-check path.
+            retryFetchContainer.visibility = if (isEdit()) View.VISIBLE
+                else if (checkedId == R.id.icon_source_favicon) View.VISIBLE
+                else View.GONE
             if (checkedId == R.id.icon_source_favicon && fetchedBitmap != null) {
                 setRoundedBitmap(iconPreview, fetchedBitmap)
             }
@@ -181,6 +192,10 @@ class ChildAppFormDialog private constructor(
             "tablet" -> view.findViewById<RadioButton>(R.id.ua_tablet).isChecked = true
             "desktop" -> view.findViewById<RadioButton>(R.id.ua_desktop).isChecked = true
             else -> view.findViewById<RadioButton>(R.id.ua_default).isChecked = true
+        }
+        when (child.displayMode) {
+            "fullscreen" -> view.findViewById<RadioButton>(R.id.display_mode_fullscreen).isChecked = true
+            else -> view.findViewById<RadioButton>(R.id.display_mode_system).isChecked = true
         }
         zoomSlider.value = child.zoomPercent.takeIf { it in 50..200 }?.toFloat() ?: 100f
         when (child.iconSource) {
@@ -264,8 +279,12 @@ class ChildAppFormDialog private constructor(
         editUrlLayout.visibility = if (isEdit()) View.VISIBLE else View.GONE
         editIgnoreSsl.visibility = if (isEdit()) View.VISIBLE else View.GONE
         if (isEdit()) {
-            retryButton.visibility = View.VISIBLE
             retryButton.text = host.getString(R.string.wizard_refetch)
+            // Mirror the RadioGroup listener: in edit mode the retry button stays
+            // reachable regardless of the current icon source (the user can switch
+            // to favicon and re-fetch at any time). Add mode never shows it here —
+            // the listener gates it on the favicon RadioButton.
+            retryFetchContainer.visibility = View.VISIBLE
         }
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
             visibility = View.VISIBLE
@@ -347,7 +366,8 @@ class ChildAppFormDialog private constructor(
         fetchedBitmap = null
         fetchError.text = errorText(reason)
         fetchError.visibility = View.VISIBLE
-        retryButton.visibility = View.VISIBLE
+        // Add mode: retry button lives inside retry_fetch_container, which is only shown in edit
+        // mode (per design D10). Add mode has no inline retry; user uses 下一步/上一步 to re-fetch.
         // A successfully fetched title must NOT be discarded just because the icon fetch failed
         // (e.g. login-walled sites whose <title> is public). Prefer the title; fall back to the
         // domain only when no title was retrieved.
@@ -365,7 +385,9 @@ class ChildAppFormDialog private constructor(
 
     private fun clearFetchError() {
         fetchError.visibility = View.GONE
-        retryButton.visibility = if (isEdit()) View.VISIBLE else View.GONE
+        // Button visibility is now gated by retry_fetch_container (edit mode).
+        // Keep the button itself visible so the container controls whether it is shown.
+        retryButton.visibility = View.VISIBLE
     }
 
     private fun errorText(reason: String): String = when (reason) {
@@ -408,6 +430,10 @@ class ChildAppFormDialog private constructor(
             R.id.ua_desktop -> "desktop"
             else -> "default"
         }
+        val displayMode = when (view.findViewById<RadioGroup>(R.id.display_mode_group).checkedRadioButtonId) {
+            R.id.display_mode_fullscreen -> "fullscreen"
+            else -> "system"
+        }
         val result = FormResult(
             name = name,
             url = normalized,
@@ -416,6 +442,7 @@ class ChildAppFormDialog private constructor(
             presetKey = presetKey,
             faviconBitmap = if (source == "favicon") fetchedBitmap else null,
             uaMode = uaMode,
+            displayMode = displayMode,
             zoomPercent = zoom,
             ignoreSsl = if (isEdit()) editIgnoreSsl.isChecked else step1IgnoreSsl.isChecked
         )

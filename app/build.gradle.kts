@@ -12,8 +12,8 @@ android {
         applicationId = "net.marscore.webhub"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 4
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +33,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Suffix the applicationId so debug builds install alongside the production app
+            // without overwriting its data (separate WebView profiles, prefs, DB).
+            applicationIdSuffix = ".debug"
+        }
         release {
             isMinifyEnabled = false
             isShrinkResources = false

@@ -3,20 +3,14 @@ package net.marscore.webhub.shortcuts
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.VectorDrawable
 import android.net.Uri
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import net.marscore.webhub.data.ChildApp
 import net.marscore.webhub.icons.AdaptiveIcons
-import net.marscore.webhub.icons.PresetIcons
+import net.marscore.webhub.icons.IconResolver
 import net.marscore.webhub.shell.WebAppActivity
-import java.io.File
 
 /**
  * Launcher pinned-shortcut management for child apps (tasks 7.1–7.3, 9.3).
@@ -225,21 +219,8 @@ object ShortcutHelper {
      *
      * @return the raw source bitmap, or null on total failure.
      */
-    fun resolveIconBitmap(context: Context, child: ChildApp): Bitmap? {
-        return when (child.iconSource) {
-            "preset" -> {
-                val key = child.iconPath
-                if (!key.isNullOrBlank()) {
-                    val resId = PresetIcons.resForKey(key)
-                    if (resId != 0) renderDrawableToBitmap(context, resId) else null
-                } else null
-            }
-            else -> {
-                val path = child.iconPath
-                if (!path.isNullOrBlank()) decodeFileBitmap(path) else null
-            }
-        } ?: renderDrawableToBitmap(context, PresetIcons.pickForId(child.id).resId)
-    }
+    fun resolveIconBitmap(context: Context, child: ChildApp): Bitmap? =
+        IconResolver.resolveIconBitmap(context, child)
 
     // ---- internals -------------------------------------------------------------
 
@@ -268,16 +249,6 @@ object ShortcutHelper {
             .build()
     }
 
-    private fun decodeFileBitmap(path: String): Bitmap? {
-        val file = File(path)
-        if (!file.exists()) return null
-        return try {
-            BitmapFactory.decodeFile(file.absolutePath)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     /**
      * Render a drawable resource to a bitmap. Handles both vector and raster drawables.
      *
@@ -291,34 +262,6 @@ object ShortcutHelper {
      * them would drown the design in dark gray, so they render untinted. Any other drawable type
      * is likewise rendered as-is.
      */
-    fun renderDrawableToBitmap(context: Context, resId: Int): Bitmap? {
-        val drawable: Drawable = try {
-            AppCompatResources.getDrawable(context, resId)
-        } catch (e: Exception) {
-            return null
-        } ?: return null
-        // Apply the visible tint ONLY for vector glyphs (single-color, otherwise transparent/white).
-        if (drawable is VectorDrawable) {
-            drawable.setTint(0xFF424242.toInt())
-        }
-        val targetSizePx = 192
-        val width: Int
-        val height: Int
-        if (drawable is VectorDrawable) {
-            width = targetSizePx
-            height = targetSizePx
-        } else {
-            val iw = drawable.intrinsicWidth.takeIf { it > 0 } ?: targetSizePx
-            val ih = drawable.intrinsicHeight.takeIf { it > 0 } ?: targetSizePx
-            // scale so the larger side is targetSizePx, keep aspect
-            val scale = targetSizePx.toFloat() / maxOf(iw, ih)
-            width = (iw * scale).toInt().coerceAtLeast(1)
-            height = (ih * scale).toInt().coerceAtLeast(1)
-        }
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, width, height)
-        drawable.draw(canvas)
-        return bitmap
-    }
+    fun renderDrawableToBitmap(context: Context, resId: Int): Bitmap? =
+        IconResolver.renderDrawableToBitmap(context, resId)
 }

@@ -51,9 +51,9 @@ class ChildAppFormDialogTest {
     }
 
     @Test fun formResultCarriesThreeIconSourcesAndFaviconBitmapSeparately() {
-        val favicon = ChildAppFormDialog.FormResult("A", "https://a.example/", "favicon", null, null, null, "default", 100, false)
-        val upload = ChildAppFormDialog.FormResult("A", "https://a.example/", "upload", Uri.parse("content://image"), null, null, "default", 100, false)
-        val preset = ChildAppFormDialog.FormResult("A", "https://a.example/", "preset", null, "mail", null, "default", 100, false)
+        val favicon = ChildAppFormDialog.FormResult("A", "https://a.example/", "favicon", null, null, null, "default", "system", 100, false)
+        val upload = ChildAppFormDialog.FormResult("A", "https://a.example/", "upload", Uri.parse("content://image"), null, null, "default", "system", 100, false)
+        val preset = ChildAppFormDialog.FormResult("A", "https://a.example/", "preset", null, "mail", null, "default", "system", 100, false)
 
         assertEquals("favicon", favicon.iconSource)
         assertNull(favicon.uploadUri)

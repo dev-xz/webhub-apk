@@ -8,4 +8,12 @@
     <!-- External jump scheme (webhub://jump/auto?url=): routing Toasts. -->
     <string name="shell_jump_invalid">链接无效</string>
     <string name="shell_jump_no_match">无匹配子应用</string>
+
+    <!-- File chooser (task 3.6): no app available to handle the picker intent. -->
+    <string name="shell_no_file_chooser">没有可用的文件选择应用</string>
+
+    <!-- Download (task 4.4): enqueue failed or no DownloadManager. -->
+    <string name="shell_download_failed">下载失败</string>
+    <!-- Download (D7 revised): non-http(s) scheme (blob:/data:/etc.) — neither DownloadManager nor the browser can fetch it. -->
+    <string name="shell_download_unsupported">该链接类型暂不支持下载</string>
 </resources>

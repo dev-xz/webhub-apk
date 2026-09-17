@@ -3,24 +3,36 @@ package net.marscore.webhub.shell
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.AlertDialog
+import android.app.DownloadManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.marscore.webhub.R
 import net.marscore.webhub.data.ChildApp
@@ -30,7 +42,9 @@ import net.marscore.webhub.icons.UrlValidator
 import net.marscore.webhub.notifications.ChildNotificationChannels
 import net.marscore.webhub.notifications.NotificationBridge
 import net.marscore.webhub.notifications.NotificationBridgeJs
+import net.marscore.webhub.widgets.WidgetUpdater
 import androidx.webkit.WebViewCompat
+import android.Manifest
 
 /**
  * Parameterized WebView shell (tasks 5.1–5.9).
@@ -60,10 +74,33 @@ class WebAppActivity : AppCompatActivity() {
 
     private lateinit var repository: ChildAppRepository
 
+    // ---- task 7.1 / design D1: display-mode branching ----
+    // True when the child is configured for fullscreen mode (immersive + manual
+    // IME inset padding + no theme-color tint). Set in startWeb after resolving
+    // the child; defaults false until then.
+    private var isFullscreenMode: Boolean = false
+
+    // ---- task 2.3 / 2.4: theme-color status-bar state ----
+    /** Current page's parsed theme color, or null when none/invalid (design D4). */
+    private var currentThemeColor: Int? = null
+    /** Saved status-bar state for video-fullscreen restore (task 2.4). */
+    private var savedBarState: ThemeColorApplier.BarState? = null
+
+    // ---- task 3.2–3.6: file chooser lifecycle ----
+    private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
+    /** Pending capture params held while CAMERA permission is being requested. */
+    private var pendingCaptureNormalized: Array<String>? = null
+    private var pendingCaptureMultiple: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyImmersiveFullscreen()
+        // 1.1 / design D1: immersive on the default browsing path fights Manifest
+        // windowSoftInputMode="adjustResize" (LAYOUT_STABLE suppresses the IME
+        // resize). system mode therefore does NOT apply immersive here.
+        // 7.1: fullscreen mode re-enables immersive on the 4 lifecycle entry points
+        // (onCreate/onResume/onNewIntent/onWindowFocusChanged); the video-fullscreen
+        // path (ChromeClient.onShowCustomView / hideCustom) stays unconditional.
         setContentView(R.layout.activity_webapp)
 
         repository = ChildAppRepository(this)
@@ -83,6 +120,15 @@ class WebAppActivity : AppCompatActivity() {
         }
 
         child = resolved
+        isFullscreenMode = resolved.displayMode == "fullscreen"
+        if (isFullscreenMode) applyImmersiveFullscreen()
+        // 7.2 / D3: stamp lastOpenedAt (recency) and notify grid widgets to re-sort. Async on IO
+        // so the WebView starts loading immediately; the 300ms debounce in WidgetUpdater coalesces
+        // rapid re-entries. Only on the success path (deleted-child fallback doesn't "open" it).
+        lifecycleScope.launch(Dispatchers.IO) {
+            repository.touchLastOpened(resolved.id)
+            WidgetUpdater.notifyAllWidgetsChanged(this@WebAppActivity)
+        }
         // 6.2 safety net: make sure the child's notification channel exists before any page fires
         // a notification. Idempotent and cheap.
         ChildNotificationChannels.ensureChannel(this, resolved)
@@ -100,7 +146,8 @@ class WebAppActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        applyImmersiveFullscreen()
+        // 7.1: immersive only in fullscreen mode (system mode relies on adjustResize).
+        if (isFullscreenMode) applyImmersiveFullscreen()
         // External jump deep-link arriving on an already-running shell
         // (documentLaunchMode="intoExisting"): navigate to the new target url so a second
         // webhub://jump/auto?url=... call switches the page instead of being ignored.
@@ -114,12 +161,15 @@ class WebAppActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        applyImmersiveFullscreen()
+        // 7.1: immersive only in fullscreen mode (system mode relies on adjustResize).
+        if (isFullscreenMode) applyImmersiveFullscreen()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) applyImmersiveFullscreen()
+        // 7.1: immersive only in fullscreen mode; re-apply on focus regain so
+        // IMMERSIVE_STICKY stays sticky after system UI briefly reappears.
+        if (isFullscreenMode && hasFocus) applyImmersiveFullscreen()
     }
 
     // ---------------- task 5.1: launch + deleted-child fallback ----------------
@@ -152,6 +202,18 @@ class WebAppActivity : AppCompatActivity() {
     private fun startWeb(app: ChildApp) {
         homeUrl = app.url
         homeHost = Uri.parse(app.url)?.host ?: ""
+
+        // 7.1: record display mode for lifecycle/immersive branching. Set here (the
+        // authoritative resolve point) per design D1; onCreate also sets it for the
+        // pre-startWeb immersive call, but this keeps it in sync if startWeb is ever
+        // called again with a different app.
+        isFullscreenMode = app.displayMode == "fullscreen"
+
+        // 7.3 / design D1: dynamic fitsSystemWindows. system mode keeps the layout's
+        // hardcoded true so content avoids the status bar; fullscreen mode clears it
+        // so content fills under the hidden status bar (immersive + manual IME
+        // padding handle the rest).
+        findViewById<View>(R.id.webapp_root).fitsSystemWindows = !isFullscreenMode
 
         webView = findViewById(R.id.webview)
         progressBar = findViewById(R.id.progress_bar)
@@ -239,8 +301,16 @@ class WebAppActivity : AppCompatActivity() {
             override fun onPageFinished(v: WebView?, url: String?) {
                 super.onPageFinished(v, url)
                 // 6.1: inject the Notification shim on every page finish (the shim self-guards
-                // against double-install via a window flag).
+                // against double-install via a window flag). Notifications work in both modes.
                 NotificationBridgeJs.inject(webView)
+                // 2.2 / design D2: read <meta name="theme-color"> (incl. dark-mode media
+                // variants) and hand the chosen color back to the __webHubThemeBridge.
+                // Re-injected on every page finish so SPA navigations re-tint the bar.
+                // 7.2: skip in fullscreen mode — the status bar is hidden, tinting is pointless
+                // and would fight the immersive flags.
+                if (!isFullscreenMode) {
+                    webView.evaluateJavascript(ThemeColorJs.jsSnippet(), null)
+                }
             }
         }
 
@@ -249,6 +319,22 @@ class WebAppActivity : AppCompatActivity() {
         // 6.1: register the JS bridge exactly once, here in configureWebView (NOT in onStart —
         // that was the reference's duplicate-registration hazard).
         webView.addJavascriptInterface(NotificationBridge(this, app), NotificationBridgeJs.bridgeName)
+        // 2.2: register the theme-color bridge exactly once alongside the notification bridge.
+        webView.addJavascriptInterface(ThemeColorBridge(), ThemeColorJs.bridgeName)
+
+        // 4.1 / design D7: route WebView-detected downloads through the system
+        // DownloadManager (public Downloads dir, UA + referer forwarded so
+        // servers that gate on those headers don't 403 us).
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimetype, _ ->
+            handleDownload(url, userAgent, contentDisposition, mimetype)
+        }
+
+        // fullscreen mode: immersive fullscreen is applied in onCreate/onResume/onWindowFocusChanged.
+        // Keyboard avoidance in fullscreen mode is intentionally NOT implemented — immersive's
+        // LAYOUT_STABLE suppresses IME insets (WindowInsetsCompat.Type.ime() returns 0) and
+        // temporarily-exiting-immersive approaches proved unreliable across ROMs. Users who need
+        // keyboard avoidance should use the "system" display mode (adjustResize handles it
+        // natively). See design D9 (revised) for the full rationale.
     }
 
     private fun isHomeHost(host: String): Boolean =
@@ -316,6 +402,12 @@ class WebAppActivity : AppCompatActivity() {
         override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
             customView = view
             customViewCallback = callback
+            // 2.4: snapshot the current status-bar state (color + LIGHT_STATUS_BAR
+            // bit) before immersive hides the bar, so hideCustom can restore it.
+            savedBarState = ThemeColorApplier.snapshot(
+                currentThemeColor,
+                window.decorView.systemUiVisibility
+            )
             applyImmersiveFullscreen()
             addContentView(
                 view,
@@ -331,9 +423,57 @@ class WebAppActivity : AppCompatActivity() {
             customView = null
             customViewCallback?.onCustomViewHidden()
             applyImmersiveFullscreen()
+            // 2.4: restore the status-bar color + icon tint captured in
+            // onShowCustomView. No-op when no snapshot was taken (e.g. fullscreen
+            // entered before any onPageFinished fired).
+            ThemeColorApplier.restore(window, savedBarState)
+            savedBarState = null
         }
 
         override fun onHideCustomView() = hideCustom()
+
+        // 3.2 / design D5: <input type="file"> routing. Normalize accept types,
+        // prefer the camera-capture path when `capture` is set + reachable +
+        // CAMERA granted, else fall back to the plain content picker.
+        override fun onShowFileChooser(
+            webView: WebView?,
+            filePathCallback: ValueCallback<Array<Uri>>?,
+            fileChooserParams: FileChooserParams,
+        ): Boolean {
+            val acceptTypes = fileChooserParams.acceptTypes ?: arrayOf()
+            val isMultiple =
+                fileChooserParams.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE
+            val isCapture = fileChooserParams.isCaptureEnabled()
+
+            if (isCapture && FileChooserDecision.isCaptureReachable(acceptTypes)) {
+                val cameraGranted = ContextCompat.checkSelfPermission(
+                    this@WebAppActivity,
+                    Manifest.permission.CAMERA,
+                ) == PackageManager.PERMISSION_GRANTED
+                if (!cameraGranted) {
+                    // 3.5: hold the params and ask for CAMERA; the result handler
+                    // either launches the capture Intent or falls back to the
+                    // content picker.
+                    pendingCaptureNormalized = FileChooserHandler.normalizeAcceptTypes(acceptTypes)
+                    pendingCaptureMultiple = isMultiple
+                    fileChooserCallback = filePathCallback
+                    ActivityCompat.requestPermissions(
+                        this@WebAppActivity,
+                        arrayOf(Manifest.permission.CAMERA),
+                        REQUEST_CAMERA_PERMISSION,
+                    )
+                    return true
+                }
+            }
+
+            val decision = FileChooserDecision.chooseIntent(
+                isCapture = isCapture,
+                isCameraGranted = true,
+                acceptTypes = acceptTypes,
+                isMultiple = isMultiple,
+            )
+            return launchFileChooser(decision.intent, filePathCallback)
+        }
 
         // 5.4 target=_blank: apply the same home-host navigation policy.
         override fun onCreateWindow(
@@ -404,6 +544,211 @@ class WebAppActivity : AppCompatActivity() {
         )
     }
 
+    // ---------------- task 3.2–3.6: file chooser launch + result + permission ----------------
+
+    /**
+     * Launch the picker [intent] and remember [callback] so onActivityResult
+     * can deliver the picked Uris (or `null` on cancel) back to the WebView.
+     * Returns true on a successful `startActivityForResult`; on
+     * `ActivityNotFoundException` toasts and cancels the callback (design D5).
+     */
+    private fun launchFileChooser(
+        intent: Intent,
+        callback: ValueCallback<Array<Uri>>?,
+    ): Boolean {
+        fileChooserCallback = callback
+        return try {
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, REQUEST_FILE_CHOOSER)
+            true
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.shell_no_file_chooser, Toast.LENGTH_SHORT).show()
+            fileChooserCallback?.onReceiveValue(null)
+            fileChooserCallback = null
+            false
+        }
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_FILE_CHOOSER) {
+            val callback = fileChooserCallback
+            fileChooserCallback = null
+            val uris: Array<Uri>? = if (resultCode == RESULT_OK) {
+                buildUrisFromResult(data)
+            } else null
+            callback?.onReceiveValue(uris)
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    /** Collect the picked Uri(s) from `data.data` (single) or `data.clipData` (multiple). */
+    private fun buildUrisFromResult(data: Intent?): Array<Uri>? {
+        if (data == null) return null
+        data.data?.let { return arrayOf(it) }
+        val clip = data.clipData ?: return null
+        if (clip.itemCount == 0) return null
+        return Array(clip.itemCount) { i -> clip.getItemAt(i).uri }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQUEST_CAMERA_PERMISSION) return
+        val normalized = pendingCaptureNormalized
+        val multiple = pendingCaptureMultiple
+        pendingCaptureNormalized = null
+        pendingCaptureMultiple = false
+        if (normalized == null) return
+        val granted = grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        val intent = if (granted) {
+            FileChooserHandler.buildCaptureIntent(normalized)
+                ?: FileChooserHandler.buildContentIntent(normalized, multiple)
+        } else {
+            // 3.5: denied → fall back to the plain content picker.
+            FileChooserHandler.buildContentIntent(normalized, multiple)
+        }
+        launchFileChooser(intent, fileChooserCallback)
+    }
+
+    // 3.4 / design D6: WebView standard — if the Activity is recreated while a
+    // picker is in flight, the old callback's Uri is stale; send null to release
+    // the WebView so future <input type=file> taps still work.
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_PENDING_FILE_CHOOSER, fileChooserCallback != null)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        if (savedInstanceState.getBoolean(KEY_PENDING_FILE_CHOOSER, false) &&
+            fileChooserCallback != null
+        ) {
+            fileChooserCallback?.onReceiveValue(null)
+            fileChooserCallback = null
+        }
+    }
+
+    // ---------------- task 4.1 / design D7: download routing ----------------
+
+    private fun handleDownload(
+        url: String,
+        userAgent: String?,
+        contentDisposition: String?,
+        mimetype: String?,
+    ) {
+        val uri = runCatching { Uri.parse(url) }.getOrNull()
+        val scheme = uri?.scheme?.lowercase()
+        // 4.1 / D7 (revised): scheme gate. DownloadManager only handles http(s).
+        // blob:/data:/file:/about: can't be enqueued (the Request constructor
+        // throws or enqueues garbage) AND can't be handed to the browser either
+        // (blob: lives only inside the WebView renderer). Show a toast and stop.
+        if (scheme != "http" && scheme != "https") {
+            Toast.makeText(this, R.string.shell_download_unsupported, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Best-effort cookie forwarding: read the WebView's session cookies for
+        // this URL so auth-gated downloads don't 401/403. Profile-aware — mirrors
+        // installServiceWorkerCookieShim's pattern. Any failure → null cookie,
+        // download proceeds without it.
+        val cookie = readDownloadCookie(url)
+
+        val dm = getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+        if (dm == null) {
+            // No DownloadManager → fall back to the browser's downloader.
+            fallbackToBrowser(uri!!)
+            return
+        }
+        try {
+            val request = DownloadRequestBuilder.buildRequest(
+                url = url,
+                userAgent = userAgent,
+                referer = if (::webView.isInitialized) webView.url else null,
+                mimetype = mimetype,
+                contentDisposition = contentDisposition,
+                cookie = cookie,
+            )
+            dm.enqueue(request)
+        } catch (e: Exception) {
+            // 4.3: enqueue can throw on malformed URLs / ROM-disabled
+            // DownloadManager. Per user decision, fall back to the browser's
+            // downloader rather than just toasting.
+            fallbackToBrowser(uri!!)
+        }
+    }
+
+    /**
+     * Best-effort Cookie header value for [url], sourced from the WebView's
+     * cookie jar. Profile-aware: when MULTI_PROFILE is supported, reads from the
+     * child's profile cookie manager (matching [installServiceWorkerCookieShim]);
+     * otherwise the framework default [android.webkit.CookieManager]. Any
+     * failure → null (download proceeds without cookies).
+     */
+    private fun readDownloadCookie(url: String): String? = try {
+        val app = child
+        if (ProfileManager.isMultiProfileSupported() && app != null) {
+            androidx.webkit.ProfileStore.getInstance()
+                .getOrCreateProfile(ProfileManager.profileNameFor(app.id))
+                .cookieManager
+                .getCookie(url)
+        } else {
+            android.webkit.CookieManager.getInstance().getCookie(url)
+        }
+    } catch (_: Throwable) {
+        null
+    }
+
+    /**
+     * D7 (revised): browser-download fallback. Hands [uri] to the system browser
+     * via `ACTION_VIEW` so its own downloader can fetch the resource when the
+     * system DownloadManager is unavailable or refuses the request. Last-resort
+     * toast when no browser can handle it either.
+     */
+    private fun fallbackToBrowser(uri: Uri) {
+        try {
+            val i = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(i)
+        } catch (_: Exception) {
+            Toast.makeText(this, R.string.shell_download_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // ---------------- task 2.3: theme-color bridge ----------------
+
+    /**
+     * `@JavascriptInterface` receiver for `ThemeColorJs.jsSnippet()`. The JS
+     * calls `onThemeColor(colorHexOrNull)` once per `onPageFinished`. Runs on a
+     * WebKit JS thread — must hop to the UI thread before touching the Window.
+     */
+    private inner class ThemeColorBridge {
+        @android.webkit.JavascriptInterface
+        fun onThemeColor(colorHex: String?) {
+            // 7.2: defense in depth — even if the bridge is somehow invoked in
+            // fullscreen mode (e.g. a cached page finishing after a mode flip),
+            // fullscreen mode must not touch statusBarColor (the bar is hidden).
+            if (isFullscreenMode) return
+            runOnUiThread {
+                val color = ThemeColorReader.parseThemeColor(colorHex)
+                currentThemeColor = color
+                if (color != null) {
+                    // D4: only override statusBarColor when we have a valid color;
+                    // otherwise leave the app theme's value untouched.
+                    ThemeColorApplier.applyStatusBarColor(
+                        window,
+                        color = color,
+                        isLight = ThemeColorReader.isLightColor(color),
+                    )
+                }
+            }
+        }
+    }
+
     // ---------------- round-2 problem D: recents-task label + icon ----------------
 
     /**
@@ -460,6 +805,11 @@ class WebAppActivity : AppCompatActivity() {
 
         /** Optional intent extra: a deep-link URL to load instead of the child's configured home URL. Used by external jump routing. */
         const val EXTRA_TARGET_URL = "net.marscore.webhub.extra.TARGET_URL"
+
+        // 3.2 / 3.5: request codes for the file-chooser + camera-permission flows.
+        private const val REQUEST_FILE_CHOOSER = 1001
+        private const val REQUEST_CAMERA_PERMISSION = 1002
+        private const val KEY_PENDING_FILE_CHOOSER = "pending_file_chooser"
 
         /**
          * Explicit intent to launch the shell for [childId]. Sets the extra, a unique

@@ -60,37 +60,6 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical|end"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/fetch_error"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:textColor="@color/hub_warning_ink"
-                android:textSize="13sp"
-                android:visibility="gone" />
-            <Button
-                android:id="@+id/btn_retry_fetch"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:drawableStart="@drawable/ic_refresh"
-                android:drawablePadding="6dp"
-                android:drawableTint="@color/hub_teal"
-                android:minWidth="0dp"
-                android:text="@string/wizard_retry"
-                android:textColor="@color/hub_teal"
-                android:visibility="gone" />
-        </LinearLayout>
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -131,6 +100,39 @@
                 android:text="@string/wizard_icon_preset"
                 android:textSize="13sp" />
         </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/retry_fetch_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|end"
+            android:orientation="horizontal"
+            android:visibility="gone">
+            <TextView
+                android:id="@+id/fetch_error"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/hub_warning_ink"
+                android:textSize="13sp"
+                android:visibility="gone" />
+            <Button
+                android:id="@+id/btn_retry_fetch"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:drawableStart="@drawable/ic_refresh"
+                android:drawablePadding="6dp"
+                android:drawableTint="@color/hub_teal"
+                android:minWidth="0dp"
+                android:text="@string/wizard_retry"
+                android:textColor="@color/hub_teal"
+                android:visibility="visible" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/upload_panel"
@@ -180,6 +182,22 @@
             <RadioButton android:id="@+id/ua_mobile" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/wizard_ua_mobile" />
             <RadioButton android:id="@+id/ua_tablet" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/wizard_ua_tablet" />
             <RadioButton android:id="@+id/ua_desktop" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/wizard_ua_desktop" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/wizard_display_mode"
+            android:textColor="@color/hub_ink"
+            android:textSize="14sp" />
+        <RadioGroup
+            android:id="@+id/display_mode_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioButton android:id="@+id/display_mode_system" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:checked="true" android:text="@string/display_mode_system" />
+            <RadioButton android:id="@+id/display_mode_fullscreen" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/display_mode_fullscreen" />
         </RadioGroup>
 
         <LinearLayout

@@ -43,6 +43,7 @@ import net.marscore.webhub.notifications.ChildNotificationChannels
 import net.marscore.webhub.shell.ProfileManager
 import net.marscore.webhub.shell.WebAppActivity
 import net.marscore.webhub.shortcuts.ShortcutHelper
+import net.marscore.webhub.widgets.WidgetUpdater
 
 /**
  * The WebHub management screen (tasks 4.1–4.9).
@@ -306,6 +307,7 @@ class HubActivity : AppCompatActivity() {
                     else -> null // resolved after we have an id
                 },
                 uaMode = form.uaMode,
+                displayMode = form.displayMode,
                 zoomPercent = form.zoomPercent,
                 ignoreSsl = form.ignoreSsl
             )
@@ -345,6 +347,9 @@ class HubActivity : AppCompatActivity() {
             // Pin shortcut (silent skip when unsupported). Uses the resolved icon bitmap.
             pinShortcutFor(finalRow)
 
+            // 7.3 / spec "数据同步刷新": child list changed → refresh home-screen widgets.
+            WidgetUpdater.updateAllWidgets(this@HubActivity)
+
             Toast.makeText(this@HubActivity, R.string.toast_created, Toast.LENGTH_SHORT).show()
         }
     }
@@ -380,6 +385,10 @@ class HubActivity : AppCompatActivity() {
                     ShortcutHelper.update(this@HubActivity, updated, bmp)
                 }
             }
+
+            // 7.3 / spec "数据同步刷新": name/icon/url fields changed → refresh home-screen widgets
+            // (1×1 label/icon, grid Factory re-query).
+            WidgetUpdater.updateAllWidgets(this@HubActivity)
         }
     }
 
@@ -409,6 +418,7 @@ class HubActivity : AppCompatActivity() {
             name = form.name,
             url = existing.url,
             uaMode = form.uaMode,
+            displayMode = form.displayMode,
             zoomPercent = form.zoomPercent,
             ignoreSsl = form.ignoreSsl
         )
@@ -486,6 +496,9 @@ class HubActivity : AppCompatActivity() {
             ProfileManager.deleteProfileData(this@HubActivity, child.id)
             ChildNotificationChannels.removeChannel(this@HubActivity, child.id)
             ShortcutHelper.disable(this@HubActivity, child.id)
+            // 7.3 / spec "删除子应用后矩阵重排" + "删除子应用后 1×1 兜底": refresh widgets so the grid
+            // drops the deleted child and 1×1 shows the "已删除" placeholder.
+            WidgetUpdater.updateAllWidgets(this@HubActivity)
             Toast.makeText(this@HubActivity, R.string.toast_deleted, Toast.LENGTH_SHORT).show()
         }
     }

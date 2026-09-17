@@ -8,6 +8,7 @@
 - **图标三来源**：自动抓取站点 favicon（支持 ICO 容器解析）、手动上传图片、内置预设图标；站点无图标时自动分配内置图标
 - **数据隔离**：每个子应用独立的 WebView Profile，cookie / localStorage / IndexedDB / 缓存互不干扰；支持按子应用单独清空数据
 - **桌面入口**：为每个子应用固定桌面快捷方式（pinned shortcut），像原生应用一样从桌面启动；支持随时重新固定
+- **桌面小组件**：在桌面放置 1×1 单图标或 2×1 / 2×2 / 4×2 图标矩阵小组件，矩阵按"最近打开"自动排序，点击直达对应子应用
 - **网页通知**：网页内 `Notification` API 的通知桥接为系统通知，按子应用独立渠道，可在系统设置中按站点静音，点击回到对应子应用
 - **访问模式**：每个子应用可选 系统默认 / 移动端 / 平板 / 电脑端 User-Agent
 - **固定缩放**：可按子应用设定固定缩放比例（100% = 系统默认渲染比例）
@@ -46,6 +47,8 @@ export ANDROID_HOME=~/Android/Sdk
 
 产物：`app/build/outputs/apk/debug/app-debug.apk`
 
+> Debug 构建使用 `net.marscore.webhub.debug` 包名（带 `.debug` 后缀），可与正式包共存安装、互不覆盖数据；release 构建仍为 `net.marscore.webhub`。
+
 ```bash
 # 单元测试
 ./gradlew testDebugUnitTest
@@ -53,10 +56,10 @@ export ANDROID_HOME=~/Android/Sdk
 
 ## 项目信息
 
-- **包名**: `net.marscore.webhub`
+- **包名**: `net.marscore.webhub`（debug 构建为 `net.marscore.webhub.debug`）
 - **最低系统**: Android 8.0 (API 26)
 - **目标系统**: Android 16 (API 36)
-- **技术栈**: Kotlin + WebView（Views，无 Compose）；Room 持久化；androidx WebKit Profile 数据隔离；ShortcutManager 桌面快捷方式
+- **技术栈**: Kotlin + WebView（Views，无 Compose）；Room 持久化；androidx WebKit Profile 数据隔离；ShortcutManager 桌面快捷方式；AppWidget 桌面小组件
 
 ## 开源协议
 
