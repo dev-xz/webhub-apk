@@ -99,7 +99,17 @@ class WebAppActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         applyImmersiveFullscreen()
+        // External jump deep-link arriving on an already-running shell
+        // (documentLaunchMode="intoExisting"): navigate to the new target url so a second
+        // webhub://jump/auto?url=... call switches the page instead of being ignored.
+        // homeUrl stays the child's configured URL — back-to-home semantics are preserved.
+        val targetUrl = intent.getStringExtra(EXTRA_TARGET_URL)
+            ?.takeIf { UrlValidator.isValid(it) }
+        if (targetUrl != null && ::webView.isInitialized) {
+            webView.loadUrl(targetUrl)
+        }
     }
 
     override fun onResume() {
