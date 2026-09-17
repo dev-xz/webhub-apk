@@ -46,3 +46,7 @@ export ANDROID_HOME=~/Android/Sdk
 - **最低系统**: Android 8.0 (API 26)
 - **目标系统**: Android 16 (API 36)
 - **技术栈**: Kotlin + WebView（Views，无 Compose）；Room 持久化；androidx WebKit Profile 数据隔离；ShortcutManager 桌面快捷方式
+
+## 开源协议
+
+本项目基于 [MIT License](LICENSE) 开源，可自由使用、修改、分发（含商用），仅需保留版权声明。
