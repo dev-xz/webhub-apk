@@ -66,6 +66,16 @@
                 app:tint="@color/hub_muted" />
 
             <ImageView
+                android:id="@+id/ic_ind_fullscreen"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/list_ind_fullscreen"
+                android:src="@drawable/ic_ind_fullscreen"
+                android:visibility="gone"
+                app:tint="@color/hub_muted" />
+
+            <ImageView
                 android:id="@+id/ic_ind_zoom"
                 android:layout_width="16dp"
                 android:layout_height="16dp"

@@ -75,6 +75,7 @@ class ChildAppAdapter(
         val name: TextView = view.findViewById(R.id.item_name)
         val domain: TextView = view.findViewById(R.id.item_domain)
         private val uaIndicator: ImageView = view.findViewById(R.id.ic_ind_ua)
+        private val fullscreenIndicator: ImageView = view.findViewById(R.id.ic_ind_fullscreen)
         private val zoomIndicator: ImageView = view.findViewById(R.id.ic_ind_zoom)
         private val sslIndicator: ImageView = view.findViewById(R.id.ic_ind_ssl)
 
@@ -109,6 +110,8 @@ class ChildAppAdapter(
             }
 
             zoomIndicator.visibility = if (child.zoomPercent > 0) View.VISIBLE else View.GONE
+            fullscreenIndicator.visibility =
+                if (child.displayMode == "fullscreen") View.VISIBLE else View.GONE
             sslIndicator.visibility = if (child.ignoreSsl) View.VISIBLE else View.GONE
         }
     }

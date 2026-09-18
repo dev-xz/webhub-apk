@@ -5,4 +5,5 @@
     <string name="list_ind_ua_desktop">电脑端访问</string>
     <string name="list_ind_zoom">固定缩放</string>
     <string name="list_ind_ssl">不校验证书</string>
+    <string name="list_ind_fullscreen">全屏模式</string>
 </resources>
